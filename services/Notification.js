@@ -45,7 +45,7 @@ class NotificationService {
 			let _ids = []
 			const ids = await Schedules.find({ name: 'createSchedule' })
 			if (ids && ids.length != 0) {
-				const scheduleSaved = ids.filter(d => d.data.companyId == companyId)
+				const scheduleSaved = ids.filter(d => d.data?.companyId == companyId)
 				if (scheduleSaved && scheduleSaved.length != 0) {
 					for (let i = 0; i < scheduleSaved.length; i++) {
 						if (scheduleSaved[i].data.companyId == companyId) {
