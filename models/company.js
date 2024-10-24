@@ -6,7 +6,7 @@ const companySchema = new Schema({
 	// Название компании
 	name: {
 		type: String,
-		required: true,
+		required: false,
 		default: '',
 	},
 	// Орг структура

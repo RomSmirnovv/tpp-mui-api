@@ -48,8 +48,7 @@ class UserRepository {
 		const response = await User
 			.findOne({ _id })
 			.then((user) => {
-				const { name, surname, patronymic, imageUrl, role } = user
-				return { name, surname, patronymic, imageUrl, role }
+				return user
 			})
 
 		if (!response) {

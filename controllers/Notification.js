@@ -5,6 +5,7 @@ class NotificationController {
 
 	static async createNotification(req, res) {
 		const notification = req.body
+		console.log('notification', notification)
 		try {
 			const newNotification = await NotificationService.createNotification(notification)
 			return res.status(200).json(newNotification);
