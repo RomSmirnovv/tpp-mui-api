@@ -1,6 +1,6 @@
 export const COOKIE_SETTINGS = {
 	REFRESH_TOKEN: {
-		httpOnly: true,
+		httpOnly: false,
 		maxAge: 1296e6, // 15 * 24 * 3600 * 1000 (15 дней)
 	},
 };

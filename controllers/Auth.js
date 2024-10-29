@@ -20,7 +20,7 @@ class AuthController {
 
 
 			res.cookie("refreshToken", refreshToken, COOKIE_SETTINGS.REFRESH_TOKEN);
-			res.cookie('logged_in', true, { httpOnly: false });
+			res.cookie('logged_in', true, COOKIE_SETTINGS.REFRESH_TOKEN);
 
 			return res.status(200).json({
 				accessToken, accessTokenExpiration
