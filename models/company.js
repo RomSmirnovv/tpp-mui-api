@@ -112,6 +112,12 @@ const companySchema = new Schema({
 	fullName: {
 		type: String,
 		required: true
+	},
+	// Определяет что отредактировал админ
+	editIsAdmin: {
+		type: Boolean,
+		required: true,
+		default: false
 	}
 }, { strict: false })
 
