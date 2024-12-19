@@ -9,6 +9,8 @@ import userRouter from './routers/User.js'
 import companyRouter from './routers/Company.js'
 import listRouter from './routers/List.js'
 import notificationRouter from './routers/Notification.js'
+import draftColumnRouter from './routers/DraftColumns.js'
+import draftRowRouter from './routers/DraftRows.js'
 import { createServer } from 'http';
 import columnRouter from './routers/Column.js'
 import messageRouter from './routers/Message.js'
@@ -106,5 +108,7 @@ app.use("", listRouter);
 app.use("", notificationRouter);
 app.use("", columnRouter);
 app.use("", messageRouter);
+app.use("", draftColumnRouter);
+app.use("", draftRowRouter);
 
 
