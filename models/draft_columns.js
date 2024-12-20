@@ -18,29 +18,21 @@ const draftColumnSchema = new Schema({
         type: String,
         required: true,
     },
+    // Название колонки которое будет сохраняться в базу
+    saveName: {
+        type: String,
+        required: true,
+    },
+    // Название колонки латиницей которое будет сохраняться в базу
+    saveField: {
+        type: String,
+        required: true,
+    },
     // Включена колонка или нет
     checked: {
         type: Boolean,
         required: false,
         default: true
-    },
-    // Не сортируется
-    sortable: {
-        type: Boolean,
-        required: false,
-        default: false
-    },
-    // Без меню в колонке
-    disableColumnMenu: {
-        type: Boolean,
-        required: false,
-        default: true
-    },
-    // Не меняем порядок колонок
-    disableReorder: {
-        type: Boolean,
-        required: false,
-        default: false
     },
     // Удаляемый ли столбец или нет
     isDeleted: {
@@ -64,12 +56,15 @@ const draftColumnSchema = new Schema({
         type: String,
         required: true
     },
-    // Удаляемый ли столбец или нет
-    isDeleted: {
-        type: Boolean,
-        required: true,
-        default: false,
-    },
-})
+    // ID черновика
+    draftId: {
+        type: String,
+        required: true
+    }
+},
+    {
+        strict: false,
+        timestamps: true
+    })
 
 export const DraftColumn = mongoose.model('DraftColumn', draftColumnSchema)

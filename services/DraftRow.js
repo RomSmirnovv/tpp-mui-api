@@ -4,10 +4,6 @@ import { Conflict } from '../utils/Errors.js'
 class DraftRowService {
 
     static async create(draftrow) {
-        const drafrowData = await DraftRowRepository.getOneByName(draftrow.name);
-        if (drafrowData) {
-            throw new Conflict("Строка с таким именем уже существует");
-        }
         const response = await DraftRowRepository.create(draftrow)
         return response
     }
@@ -17,8 +13,8 @@ class DraftRowService {
         return response
     }
 
-    static async getAllByUser(userId) {
-        const response = await DraftRowRepository.getAllByUser(userId)
+    static async getAllByDraft(draftId) {
+        const response = await DraftRowRepository.getAllByDraft(draftId)
         return response
     }
 

@@ -4,10 +4,6 @@ import { Conflict } from '../utils/Errors.js'
 class DraftColumnService {
 
     static async create(draftcolumn) {
-        const drafcolumnData = await DraftColumnRepository.getOneByName(draftcolumn.name);
-        if (drafcolumnData) {
-            throw new Conflict("Колонка с таким именем уже существует");
-        }
         const response = await DraftColumnRepository.create(draftcolumn)
         return response
     }
@@ -17,8 +13,8 @@ class DraftColumnService {
         return response
     }
 
-    static async getAllByUser(userId) {
-        const response = await DraftColumnRepository.getAllByUser(userId)
+    static async getAllByDraft(draftId) {
+        const response = await DraftColumnRepository.getAllByDraft(draftId)
         return response
     }
 

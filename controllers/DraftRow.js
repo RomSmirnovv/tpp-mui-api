@@ -34,10 +34,10 @@ class DraftRowController {
     }
 
 
-    static async getAllByUser(req, res) {
-        const { userId } = req.params
+    static async getAllByDraft(req, res) {
+        const { draftId } = req.params
         try {
-            const draftrow = await DraftRowService.getAllByUser(userId)
+            const draftrow = await DraftRowService.getAllByDraft(draftId)
             return res.status(200).json(draftrow)
         } catch (err) {
             return ErrorsUtils.catchError(res, err)

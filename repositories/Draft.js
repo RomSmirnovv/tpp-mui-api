@@ -1,12 +1,11 @@
 import mongoose from 'mongoose';
-import { DraftColumn } from '../models/draft_columns.js'
+import { Draft } from '../models/draft.js'
 
-class DraftColumnRepository {
+class DraftRepository {
 
-
-    static async create(draftcolumn) {
-        const newDraftColumn = new DraftColumn(draftcolumn)
-        const response = await newDraftColumn
+    static async create(draft) {
+        const newDraft = new Draft(draft)
+        const response = await newDraft
             .save()
             .then((result) => {
                 return result
@@ -20,10 +19,10 @@ class DraftColumnRepository {
     }
 
     static async getOne(id) {
-        const response = await DraftColumn
+        const response = await Draft
             .findOne({ _id: id })
-            .then((draftcolumn) => {
-                return draftcolumn
+            .then((draft) => {
+                return draft
             })
         if (!response) {
             return null;
@@ -32,10 +31,10 @@ class DraftColumnRepository {
     }
 
     static async getOneByName(name) {
-        const response = await DraftColumn
+        const response = await Draft
             .findOne({ name: name })
-            .then((draftcolumn) => {
-                return draftcolumn
+            .then((draft) => {
+                return draft
             })
         if (!response) {
             return null;
@@ -43,11 +42,11 @@ class DraftColumnRepository {
         return response
     }
 
-    static async getAllByDraft(draftId) {
-        const response = await DraftColumn
-            .find({ draftId })
-            .then((draftcolumn) => {
-                return draftcolumn
+    static async getAllByUser(id) {
+        const response = await Draft
+            .find({ userId: id })
+            .then((draft) => {
+                return draft
             })
         if (!response) {
             return null;
@@ -56,7 +55,7 @@ class DraftColumnRepository {
     }
 
     static async getAll() {
-        const response = await DraftColumn.find()
+        const response = await Draft.find()
             .then((result) => {
                 return result
             })
@@ -68,20 +67,20 @@ class DraftColumnRepository {
     }
 
     static async delete(id) {
-        await DraftColumn
+        await Draft
             .deleteOne({ _id: id })
     }
 
-    static async update({ id, draftcolumn }) {
-        await DraftColumn
-            .updateOne({ _id: id }, { $set: draftcolumn })
-            .then((draftcolumnRes) => {
-                return draftcolumnRes
+    static async update({ id, draft }) {
+        await Draft
+            .updateOne({ _id: id }, { $set: draft })
+            .then((draftRes) => {
+                return draftRes
             })
-        const response = DraftColumn
+        const response = Draft
             .findOne({ _id: id })
-            .then((draftcolumnRes) => {
-                return draftcolumnRes
+            .then((draftRes) => {
+                return draftRes
             })
         if (!response) {
             return null;
@@ -90,4 +89,4 @@ class DraftColumnRepository {
     }
 }
 
-export default DraftColumnRepository;
+export default DraftRepository;

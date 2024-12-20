@@ -43,9 +43,9 @@ class DraftColumnRepository {
         return response
     }
 
-    static async getAllByUser(id) {
+    static async getAllByDraft(draftId) {
         const response = await DraftRow
-            .find({ userId: id })
+            .find({ draftId })
             .then((draftrow) => {
                 return draftrow
             })

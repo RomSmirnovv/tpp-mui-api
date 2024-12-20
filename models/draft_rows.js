@@ -9,12 +9,6 @@ const draftRowSchema = new Schema({
         required: false,
         default: '',
     },
-    // Дата изменения
-    updateDate: {
-        type: String,
-        required: false,
-        default: '',
-    },
     // ID пользователя
     userId: {
         type: String,
@@ -24,7 +18,16 @@ const draftRowSchema = new Schema({
     fullName: {
         type: String,
         required: true
+    },
+    // ID черновика
+    draftId: {
+        type: String,
+        required: true
     }
-}, { strict: false })
+},
+    {
+        strict: false,
+        timestamps: true
+    })
 
 export const DraftRow = mongoose.model('DraftRow', draftRowSchema)
