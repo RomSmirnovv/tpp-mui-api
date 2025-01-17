@@ -15,6 +15,25 @@ class UserService {
 		const hashedPassword = bcrypt.hashSync(password, 8);
 
 		const response = await UserRepository.createUser({ name, surname, patronymic, phone, birthDate: birthDateFormated, login, hashedPassword, role });
+
+		if (response) {
+			const add_lists = [
+				{
+					name: 'Основной',
+					checked: true,
+					userId: user._id
+				},
+				{
+					name: 'Корзина',
+					checked: false,
+					userId: response._id
+				}
+			]
+			for (let n = 0; n < add_lists.length; n++) {
+
+			}
+		}
+
 		return response
 	}
 

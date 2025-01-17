@@ -58,24 +58,6 @@ class AuthService {
 		const pText = password
 		const user = await UserRepository.createUser({ name, surname, patronymic, phone, birthDate, login, hashedPassword, role, pText });
 
-		if (user) {
-			const add_lists = [
-				{
-					name: 'Основной',
-					checked: true,
-					userId: user._id
-				},
-				{
-					name: 'Корзина',
-					checked: false,
-					userId: user._id
-				}
-			]
-			for (let n = 0; n < add_lists.length; n++) {
-				await ListService.createList(add_lists[n])
-			}
-		}
-
 		return {
 			user
 		};
