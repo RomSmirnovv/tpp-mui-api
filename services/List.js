@@ -16,7 +16,7 @@ class ListService {
 			// получаем лист, который выбран до этого и меняем у него checked на false
 			const listData = await ListRepository.getAllListsByUser(list.userId)
 			const listCheckedData = listData.filter(l => l.checked === true)
-			listCheckedData[0].checked = false
+			listCheckedData[0]?.checked = false
 			await ListRepository.updateList({ id: listCheckedData[0]._id, list: listCheckedData[0] })
 		}
 		// получаем все колонки в базе данных
