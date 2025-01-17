@@ -22,7 +22,7 @@ class UserService {
 				{
 					name: 'Основной',
 					checked: true,
-					userId: user._id
+					userId: response._id
 				},
 				{
 					name: 'Корзина',
