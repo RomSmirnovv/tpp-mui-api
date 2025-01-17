@@ -2,6 +2,7 @@ import UserRepository from '../repositories/User.js';
 import { Conflict } from '../utils/Errors.js'
 import bcrypt from "bcryptjs";
 import moment from 'moment/moment.js';
+import ListService from './List.js';
 
 class UserService {
 
@@ -30,7 +31,7 @@ class UserService {
 				}
 			]
 			for (let n = 0; n < add_lists.length; n++) {
-
+				await ListService.createList(add_lists[n])
 			}
 		}
 
