@@ -22,12 +22,14 @@ class UserService {
 				{
 					name: 'Основной',
 					checked: true,
-					userId: response._id
+					userId: response._id,
+					order: 0
 				},
 				{
 					name: 'Корзина',
 					checked: false,
-					userId: response._id
+					userId: response._id,
+					order: 9999
 				}
 			]
 			for (let n = 0; n < add_lists.length; n++) {
