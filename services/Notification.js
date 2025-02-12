@@ -1,10 +1,7 @@
 import NotificationRepository from '../repositories/Notification.js';
 import { Conflict } from '../utils/Errors.js'
 import dotenv from "dotenv"
-import Agenda from "agenda";
 import dayjs from 'dayjs'
-import { Notification } from '../models/notification.js'
-import { Schedules } from '../models/schedule.js'
 import { io } from '../server.js'
 import moment from 'moment';
 
@@ -12,84 +9,42 @@ dotenv.config();
 
 const DB_URL = process.env.DB_URL
 
-const agendaSchedules = new Agenda({
-	db: {
-		address: DB_URL,
-		collection: "schedules",
-	},
-});
-
-agendaSchedules.define("createSchedule", async (schedule) => {
-	const activeSchedule = schedule
-	let sendedNotification = schedule?.attrs?.data;
-	sendedNotification.sended = true
-
-	const updatedNotification = await Notification.updateOne({ _id: sendedNotification._id }, { $set: sendedNotification })
-
-
-	io.to(sendedNotification.userId).emit("getNewNotifications", {
-		data: sendedNotification,
-	})
-});
-
-agendaSchedules.start();
-
 
 class NotificationService {
+
+	static async sendedNotification() {
+		const nowDate = dayjs().format('YYYY-MM-DD HH:mm');
+		const notifications = await NotificationRepository.getAllNotifications();
+		const notSendNotifications = notifications.filter(notification => {
+			return notification.sended === false
+		})
+		if (notSendNotifications.length > 0) {
+			for (let i = 0; i < notSendNotifications.length; i++) {
+				if (nowDate === notSendNotifications[i].notificationDateTime) {
+					notSendNotifications[i].sended = true
+					const response = await NotificationRepository.updateNotification({ id: notSendNotifications[i]._id, notification: notSendNotifications[i] }).then(data => {
+						io.to(notSendNotifications[i].userId).emit("getNewNotifications", {
+							data: notSendNotifications[i],
+						})
+					})
+				}
+			}
+		}
+	}
 
 
 	static async createNotification(notification) {
 		const companyId = notification.companyId
 		const notificationData = await NotificationRepository.getOneNotificationByCompany(companyId)
 		if (notificationData) {
-			let _ids = []
-			const ids = await Schedules.find({ name: 'createSchedule' })
-			if (ids && ids.length != 0) {
-				const scheduleSaved = ids.filter(d => d.data?.companyId == companyId)
-				if (scheduleSaved && scheduleSaved.length != 0) {
-					for (let i = 0; i < scheduleSaved.length; i++) {
-						if (scheduleSaved[i].data.companyId == companyId) {
-							_ids.push(scheduleSaved[i]._id.toString())
-						}
-					}
-					await Schedules.deleteMany({ _id: { $in: _ids } })
-				}
-			}
-
 			const response = await NotificationRepository.updateNotification({ id: notificationData._id, notification }).then(data => {
-				const now = moment().format('YYYY-MM-DD HH:mm');
-				const end = notification.notificationDateTime;
-				const duration = moment.duration(moment(end).diff(now));
-				var minutes = duration.minutes();
-				duration.subtract(moment.duration(minutes, 'minutes'));
-
-				agendaSchedules.schedule(
-					'in ' + minutes + ' minutes',
-					'createSchedule',
-					data
-				);
 				io.to(notificationData.userId).emit("updateNotification", {
 					data: notificationData,
 				})
 			})
-
-
-
-
 			return response
 		} else {
-			const response = await NotificationRepository.createNotification(notification).then(data => {
-				const now = moment().format('YYYY-MM-DD HH:mm');
-				const end = notification.notificationDateTime;
-				const duration = moment.duration(moment(end).diff(now));
-				var minutes = duration.minutes();
-				duration.subtract(moment.duration(minutes, 'minutes'));
-				agendaSchedules.schedule(
-					'in ' + minutes + ' minutes',
-					'createSchedule',
-					data
-				);
-			})
+			const response = await NotificationRepository.createNotification(notification)
 			return response
 		}
 	}

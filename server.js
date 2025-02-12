@@ -19,6 +19,7 @@ import { Server } from "socket.io";
 import NotificationRepository from './repositories/Notification.js'
 import NotificationService from './services/Notification.js'
 import MessageService from './services/Message.js'
+import cron from 'node-cron'
 
 dotenv.config();
 
@@ -44,6 +45,10 @@ mongoose
 	.connect(DB_URL)
 	.then(() => console.log('Connected to Mongo'))
 	.catch((err) => console.log(`${err}`))
+
+cron.schedule("* * * * * ", () => {
+	NotificationService.sendedNotification();
+});
 
 const server = createServer(app);
 

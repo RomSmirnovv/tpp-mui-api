@@ -1,7 +1,6 @@
 import { Notification } from '../models/notification.js';
 import CompanyRepository from '../repositories/Company.js';
 import NotificationRepository from '../repositories/Notification.js';
-import { Schedules } from '../models/schedule.js'
 import { Conflict } from '../utils/Errors.js'
 import moment from 'moment'
 
@@ -38,6 +37,12 @@ class CompanyService {
 			throw new Conflict("Нет компании с таким ID");
 		}
 		await CompanyRepository.deleteCompany(id)
+
+		// проверяем есть ли уведомления данной компании, если есть то удаляем их
+		const notification = await Notification.findOne({ companyId: id })
+		if (notification) {
+			await Notification.deleteOne({ _id: notification._id })
+		}
 	}
 
 	static async update({ id, company }) {
@@ -47,19 +52,6 @@ class CompanyService {
 			newCompany.notificationDateTime = ''
 			const notification = await Notification.findOne({ companyId: newCompany._id })
 			if (notification) {
-				const ids = await Schedules.find({ name: 'createSchedule' }).then(dataSchedule => {
-
-					if (dataSchedule && dataSchedule.length != 0) {
-						let _ids = []
-						const scheduleSavedNotNull = dataSchedule.filter(d => d.data !== null)
-						const scheduleSaved = scheduleSavedNotNull.filter(d => d.data._id.toString() == notification._id.toString())
-						for (let i = 0; i < scheduleSaved.length; i++) {
-							_ids.push(scheduleSaved[i]._id.toString())
-						}
-						return _ids
-					}
-				})
-				await Schedules.deleteMany({ _id: { $in: ids } })
 				await Notification.deleteOne({ _id: notification._id })
 			}
 		}
