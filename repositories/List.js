@@ -19,9 +19,13 @@ class ListRepository {
 
 	}
 
-	static async getOneList(id) {
+	static async getOneList(id, workspaceId) {
+		const query = { _id: id };
+		if (workspaceId) {
+			query.workspaceId = workspaceId;
+		}
 		const response = await List
-			.findOne({ _id: id })
+			.findOne(query)
 			.then((list) => {
 				return list
 			})
@@ -31,9 +35,13 @@ class ListRepository {
 		return response
 	}
 
-	static async getAllListsByUser(id) {
+	static async getAllListsByUser(id, workspaceId) {
+		const query = { userId: id };
+		if (workspaceId) {
+			query.workspaceId = workspaceId;
+		}
 		const response = await List
-			.find({ userId: id })
+			.find(query)
 			.then((list) => {
 				return list
 			})
@@ -43,8 +51,12 @@ class ListRepository {
 		return response
 	}
 
-	static async getAllLists() {
-		const response = await List.find()
+	static async getAllLists(workspaceId) {
+		const query = {};
+		if (workspaceId) {
+			query.workspaceId = workspaceId;
+		}
+		const response = await List.find(query)
 			.then((result) => {
 				return result
 			})
@@ -55,9 +67,13 @@ class ListRepository {
 		return response
 	}
 
-	static async deleteList(id) {
+	static async deleteList(id, workspaceId) {
+		const query = { _id: id };
+		if (workspaceId) {
+			query.workspaceId = workspaceId;
+		}
 		await List
-			.deleteOne({ _id: id })
+			.deleteOne(query)
 	}
 
 	static async updateList({ id, list }) {

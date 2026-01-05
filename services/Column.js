@@ -5,12 +5,14 @@ import { Conflict } from '../utils/Errors.js'
 class ColumnService {
 
 	static async create(column) {
-		const columnData = await ColumnRepository.getOneByName(column.name);
+		// Проверяем уникальность имени в рамках workspace
+		const columnData = await ColumnRepository.getOneByName(column.name, column.workspaceId);
 		if (columnData) {
 			throw new Conflict("Колонка с таким именем уже существует");
 		}
 		const response = await ColumnRepository.create(column)
-		const lists = await ListRepository.getAllLists()
+		// Обновляем только списки текущего workspace
+		const lists = await ListRepository.getAllLists(column.workspaceId)
 		for (let i = 0; i < lists.length; i++) {
 			lists[i].columns.push({
 				key: lists.length + 1,
@@ -34,21 +36,21 @@ class ColumnService {
 		return response
 	}
 
-	static async getAll() {
-		const response = await ColumnRepository.getAll()
+	static async getAll(workspaceId) {
+		const response = await ColumnRepository.getAll(workspaceId)
 		return response
 	}
 
-	static async delete(id) {
-		const columnData = await ColumnRepository.getOne(id);
+	static async delete(id, workspaceId) {
+		const columnData = await ColumnRepository.getOne(id, workspaceId);
 		if (!columnData) {
 			throw new Conflict("Нет колонки с таким ID");
 		}
-		await ColumnRepository.delete(id)
+		await ColumnRepository.delete(id, workspaceId)
 	}
 
-	static async update({ id, column }) {
-		const columnData = await ColumnRepository.getOne(id);
+	static async update({ id, column, workspaceId }) {
+		const columnData = await ColumnRepository.getOne(id, workspaceId);
 		if (!columnData) {
 			throw new Conflict("Нет колонки с таким ID");
 		}

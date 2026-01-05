@@ -28,6 +28,13 @@ const messageSchema = new Schema({
 	dateTime: {
 		type: String,
 		required: true
+	},
+	// ID workspace (компании)
+	workspaceId: {
+		type: mongoose.Schema.Types.ObjectId,
+		ref: 'Workspace',
+		required: false,
+		default: null
 	}
 }, { strict: false })
 

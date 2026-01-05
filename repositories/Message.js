@@ -19,9 +19,13 @@ class MessageRepository {
 
 	}
 
-	static async getOne(id) {
+	static async getOne(id, workspaceId) {
+		const query = { _id: id };
+		if (workspaceId) {
+			query.workspaceId = workspaceId;
+		}
 		const response = await Message
-			.findOne({ _id: id })
+			.findOne(query)
 			.then((message) => {
 				return message
 			})
@@ -31,9 +35,13 @@ class MessageRepository {
 		return response
 	}
 
-	static async getAll() {
+	static async getAll(workspaceId) {
+		const query = {};
+		if (workspaceId) {
+			query.workspaceId = workspaceId;
+		}
 		const response = await Message
-			.find()
+			.find(query)
 			.then((message) => {
 				return message
 			})
@@ -43,9 +51,13 @@ class MessageRepository {
 		return response
 	}
 
-	static async getAllByRoom(room) {
+	static async getAllByRoom(room, workspaceId) {
+		const query = { room };
+		if (workspaceId) {
+			query.workspaceId = workspaceId;
+		}
 		const response = await Message
-			.find({ room })
+			.find(query)
 			.then((message) => {
 				return message
 			})
@@ -55,9 +67,13 @@ class MessageRepository {
 		return response
 	}
 
-	static async delete(id) {
+	static async delete(id, workspaceId) {
+		const query = { _id: id };
+		if (workspaceId) {
+			query.workspaceId = workspaceId;
+		}
 		await Message
-			.deleteOne({ _id: id })
+			.deleteOne(query)
 	}
 
 

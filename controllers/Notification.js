@@ -1,11 +1,17 @@
 import NotificationService from '../services/Notification.js'
 import ErrorsUtils from "../utils/Errors.js";
+import { getWorkspaceIdFromRequest } from '../utils/getWorkspaceId.js';
 
 class NotificationController {
 
 	static async createNotification(req, res) {
 		const notification = req.body
 		try {
+			// Получаем workspaceId из запроса
+			const workspaceId = await getWorkspaceIdFromRequest(req);
+			if (workspaceId) {
+				notification.workspaceId = workspaceId;
+			}
 			const newNotification = await NotificationService.createNotification(notification)
 			return res.status(200).json(newNotification);
 		} catch (err) {
@@ -26,7 +32,9 @@ class NotificationController {
 
 	static async getAllNotifications(req, res) {
 		try {
-			const notifications = await NotificationService.getAllNotifications()
+			// Получаем workspaceId из запроса для фильтрации
+			const workspaceId = await getWorkspaceIdFromRequest(req);
+			const notifications = await NotificationService.getAllNotifications(null, workspaceId)
 			return res.status(200).json(notifications)
 		} catch (err) {
 			return ErrorsUtils.catchError(res, err)
@@ -37,7 +45,9 @@ class NotificationController {
 	static async getAllNotificationsByUser(req, res) {
 		const { userId } = req.params
 		try {
-			const notifications = await NotificationService.getAllNotifications(userId)
+			// Получаем workspaceId из запроса для фильтрации
+			const workspaceId = await getWorkspaceIdFromRequest(req);
+			const notifications = await NotificationService.getAllNotifications(userId, workspaceId)
 			return res.status(200).json(notifications)
 		} catch (err) {
 			return ErrorsUtils.catchError(res, err)
@@ -47,7 +57,9 @@ class NotificationController {
 	static async deleteNotification(req, res) {
 		const { id } = req.params
 		try {
-			await NotificationService.delete(id)
+			// Получаем workspaceId из запроса для проверки принадлежности
+			const workspaceId = await getWorkspaceIdFromRequest(req);
+			await NotificationService.delete(id, workspaceId)
 			return res.status(200).json(`Уведомление с id = ${id} удалено!`)
 		} catch (err) {
 			return ErrorsUtils.catchError(res, err);
@@ -58,7 +70,9 @@ class NotificationController {
 		const { id } = req.params
 		const notification = req.body
 		try {
-			const updateNotification = await NotificationService.update({ id, notification })
+			// Получаем workspaceId из запроса для проверки принадлежности
+			const workspaceId = await getWorkspaceIdFromRequest(req);
+			const updateNotification = await NotificationService.update({ id, notification, workspaceId })
 			return res.status(200).json(updateNotification);
 		} catch (err) {
 			return ErrorsUtils.catchError(res, err);

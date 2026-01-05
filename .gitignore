@@ -15,6 +15,12 @@ dist-ssr
 
 # Secret file
 .env
+.env.example
+README_ENV.md
+README_SOCKETIO.md
+
+# Uploaded files
+uploads/
 
 # Editor directories and files
 .vscode/*

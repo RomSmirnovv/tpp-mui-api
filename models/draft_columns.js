@@ -60,6 +60,13 @@ const draftColumnSchema = new Schema({
     draftId: {
         type: String,
         required: true
+    },
+    // ID workspace (компании)
+    workspaceId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Workspace',
+        required: false,
+        default: null
     }
 },
     {

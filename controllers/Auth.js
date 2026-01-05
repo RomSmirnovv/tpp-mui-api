@@ -1,4 +1,5 @@
 import AuthService from "../services/Auth.js";
+import EmailVerificationService from "../services/EmailVerification.js";
 import ErrorsUtils from "../utils/Errors.js";
 import { COOKIE_SETTINGS } from "../constants.js";
 import moment from 'moment/moment.js';
@@ -10,14 +11,21 @@ class AuthController {
 		const { login, password } = req.body;
 		const { fingerprint } = req;
 		try {
-			const { accessToken, refreshToken, accessTokenExpiration
-			} =
+			const { accessToken, refreshToken, accessTokenExpiration, user } =
 				await AuthService.login({
 					login,
 					password,
 					fingerprint,
 				});
 
+			// Проверка подтверждения email
+			if (!user.isEmailVerified) {
+				return res.status(403).json({
+					message: 'Email не подтвержден',
+					error: 'EMAIL_NOT_VERIFIED',
+					isEmailVerified: false
+				});
+			}
 
 			res.cookie("refreshToken", refreshToken, COOKIE_SETTINGS.REFRESH_TOKEN);
 			res.cookie('logged_in', true, COOKIE_SETTINGS.REFRESH_TOKEN);
@@ -76,6 +84,45 @@ class AuthController {
 			return res.status(200).json({
 				accessToken,
 				accessTokenExpiration
+			});
+		} catch (err) {
+			return ErrorsUtils.catchError(res, err);
+		}
+	}
+
+	/**
+	 * Подтверждение email по токену
+	 * GET /auth/verify-email/:token
+	 */
+	static async verifyEmail(req, res) {
+		try {
+			const { token } = req.params;
+			console.log('🔍 Попытка подтверждения email с токеном:', token ? token.substring(0, 20) + '...' : 'отсутствует');
+			
+			const result = await EmailVerificationService.verifyEmail(token);
+
+			console.log('✅ Email подтвержден успешно');
+			return res.status(200).json({
+				message: result.message,
+				alreadyVerified: result.alreadyVerified || false
+			});
+		} catch (err) {
+			console.error('❌ Ошибка при подтверждении email:', err.message);
+			return ErrorsUtils.catchError(res, err);
+		}
+	}
+
+	/**
+	 * Повторная отправка токена подтверждения
+	 * POST /auth/resend-verification
+	 */
+	static async resendVerification(req, res) {
+		try {
+			const { userId } = req.body;
+			const result = await EmailVerificationService.resendToken(userId);
+
+			return res.status(200).json({
+				message: 'Ссылка для подтверждения email отправлена'
 			});
 		} catch (err) {
 			return ErrorsUtils.catchError(res, err);

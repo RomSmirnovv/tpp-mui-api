@@ -45,6 +45,7 @@ class AuthService {
 			accessToken,
 			refreshToken,
 			accessTokenExpiration: ACCESS_TOKEN_EXPIRATION,
+			user: userData
 		};
 	}
 
@@ -55,8 +56,7 @@ class AuthService {
 		}
 
 		const hashedPassword = bcrypt.hashSync(password, 8);
-		const pText = password
-		const user = await UserRepository.createUser({ name, surname, patronymic, phone, birthDate, login, hashedPassword, role, pText });
+		const user = await UserRepository.createUser({ name, surname, patronymic, phone, birthDate, login, hashedPassword, role });
 
 		return {
 			user

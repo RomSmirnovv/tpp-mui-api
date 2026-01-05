@@ -8,6 +8,7 @@ companyRouter.get("/company/:id", CompanyController.getOneCompany)
 companyRouter.get("/company", CompanyController.getAllCompanies)
 companyRouter.get("/companies/:userId", CompanyController.getAllCompaniesByUser)
 companyRouter.get("/companies/:userId/:listName", CompanyController.getAllCompaniesByUserAndList)
+companyRouter.get("/companies/workspace/:workspaceId", CompanyController.getAllCompaniesByWorkspace)
 companyRouter.delete("/company/:id", CompanyController.deleteCompany)
 companyRouter.patch("/company/:id", CompanyController.updateCompany)
 

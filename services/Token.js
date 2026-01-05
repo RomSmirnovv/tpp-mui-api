@@ -1,28 +1,26 @@
 import jwt from "jsonwebtoken";
-import dotenv from "dotenv";
 import { Forbidden, Unauthorized } from "../utils/Errors.js";
-
-dotenv.config();
+import config from "../config/env.js";
 
 class TokenService {
 	static async generateAccessToken(payload) {
-		return await jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, {
-			expiresIn: "30m",
+		return await jwt.sign(payload, config.jwt.accessTokenSecret, {
+			expiresIn: config.jwt.accessTokenExpiration,
 		});
 	}
 
 	static async generateRefreshToken(payload) {
-		return await jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, {
-			expiresIn: "15d",
+		return await jwt.sign(payload, config.jwt.refreshTokenSecret, {
+			expiresIn: config.jwt.refreshTokenExpiration,
 		});
 	}
 
 	static async verifyAccessToken(accessToken) {
-		return await jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
+		return await jwt.verify(accessToken, config.jwt.accessTokenSecret);
 	}
 
 	static async verifyRefreshToken(refreshToken) {
-		return await jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+		return await jwt.verify(refreshToken, config.jwt.refreshTokenSecret);
 	}
 
 	static async checkAccess(req, _, next) {

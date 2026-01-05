@@ -1,4 +1,5 @@
 import MessageRepository from '../repositories/Message.js';
+import { Conflict } from '../utils/Errors.js';
 
 class MessageService {
 
@@ -12,27 +13,27 @@ class MessageService {
 		return response
 	}
 
-	static async getAll() {
-		const response = await MessageRepository.getAll()
+	static async getAll(workspaceId) {
+		const response = await MessageRepository.getAll(workspaceId)
 		return response
 	}
 
-	static async getAllByRoom(room) {
-		const response = await MessageRepository.getAllByRoom(room)
+	static async getAllByRoom(room, workspaceId) {
+		const response = await MessageRepository.getAllByRoom(room, workspaceId)
 		return response
 	}
 
-	static async delete(id) {
-		const messageData = await MessageRepository.getOne(id);
+	static async delete(id, workspaceId) {
+		const messageData = await MessageRepository.getOne(id, workspaceId);
 		if (!messageData) {
 			throw new Conflict("Нет сообщения с таким ID");
 		}
-		await MessageRepository.delete(id)
+		await MessageRepository.delete(id, workspaceId)
 	}
 
-	static async update({ id, message }) {
+	static async update({ id, message, workspaceId }) {
 		let updateMessage = message
-		const messageData = await MessageRepository.getOne(id);
+		const messageData = await MessageRepository.getOne(id, workspaceId);
 		if (!messageData) {
 			throw new Conflict("Нет сообщения с таким ID");
 		}

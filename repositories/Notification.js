@@ -20,9 +20,13 @@ class NotificationRepository {
 
 	}
 
-	static async getOneNotification(id) {
+	static async getOneNotification(id, workspaceId) {
+		const query = { _id: id };
+		if (workspaceId) {
+			query.workspaceId = workspaceId;
+		}
 		const response = await Notification
-			.findOne({ _id: id })
+			.findOne(query)
 			.then((notification) => {
 				return notification
 			})
@@ -33,9 +37,13 @@ class NotificationRepository {
 	}
 
 
-	static async getAllNotificationsByUser(id) {
+	static async getAllNotificationsByUser(id, workspaceId) {
+		const query = { userId: id, sended: true };
+		if (workspaceId) {
+			query.workspaceId = workspaceId;
+		}
 		const response = await Notification
-			.find({ userId: id, sended: true })
+			.find(query)
 			.then((notification) => {
 				return notification
 			})
@@ -45,9 +53,13 @@ class NotificationRepository {
 		return response
 	}
 
-	static async getOneNotificationByCompany(companyId) {
+	static async getOneNotificationByCompany(companyId, workspaceId) {
+		const query = { companyId };
+		if (workspaceId) {
+			query.workspaceId = workspaceId;
+		}
 		const response = await Notification
-			.findOne({ companyId })
+			.findOne(query)
 			.then((notification) => {
 				return notification
 			})
@@ -57,8 +69,12 @@ class NotificationRepository {
 		return response
 	}
 
-	static async getAllNotifications() {
-		const response = await Notification.find()
+	static async getAllNotifications(workspaceId) {
+		const query = {};
+		if (workspaceId) {
+			query.workspaceId = workspaceId;
+		}
+		const response = await Notification.find(query)
 			.then((result) => {
 				return result
 			})
@@ -69,9 +85,13 @@ class NotificationRepository {
 		return response
 	}
 
-	static async deleteNotification(id) {
+	static async deleteNotification(id, workspaceId) {
+		const query = { _id: id };
+		if (workspaceId) {
+			query.workspaceId = workspaceId;
+		}
 		await Notification
-			.deleteOne({ _id: id })
+			.deleteOne(query)
 	}
 
 	static async updateNotification({ id, notification }) {

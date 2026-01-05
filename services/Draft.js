@@ -13,26 +13,26 @@ class DraftService {
         return response
     }
 
-    static async getAllByUser(userId) {
-        const response = await DraftRepository.getAllByUser(userId)
+    static async getAllByUser(userId, workspaceId) {
+        const response = await DraftRepository.getAllByUser(userId, workspaceId)
         return response
     }
 
-    static async getAll() {
-        const response = await DraftRepository.getAll()
+    static async getAll(workspaceId) {
+        const response = await DraftRepository.getAll(workspaceId)
         return response
     }
 
-    static async delete(id) {
-        const draftData = await DraftRepository.getOne(id);
+    static async delete(id, workspaceId) {
+        const draftData = await DraftRepository.getOne(id, workspaceId);
         if (!draftData) {
             throw new Conflict("Нет черновика с таким ID");
         }
-        await DraftRepository.delete(id)
+        await DraftRepository.delete(id, workspaceId)
     }
 
-    static async update({ id, draft }) {
-        const draftData = await DraftRepository.getOne(id);
+    static async update({ id, draft, workspaceId }) {
+        const draftData = await DraftRepository.getOne(id, workspaceId);
         if (!draftData) {
             throw new Conflict("Нет черновика с таким ID");
         }

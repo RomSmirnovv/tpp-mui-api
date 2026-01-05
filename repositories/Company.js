@@ -19,9 +19,13 @@ class CompanyRepository {
 
 	}
 
-	static async getOneCompany(id) {
+	static async getOneCompany(id, workspaceId) {
+		const query = { _id: id };
+		if (workspaceId) {
+			query.workspaceId = workspaceId;
+		}
 		const response = await Company
-			.findOne({ _id: id })
+			.findOne(query)
 			.then((company) => {
 				return company
 			})
@@ -31,9 +35,13 @@ class CompanyRepository {
 		return response
 	}
 
-	static async getAllCompaniesByUser(id) {
+	static async getAllCompaniesByUser(id, workspaceId) {
+		const query = { userId: id };
+		if (workspaceId) {
+			query.workspaceId = workspaceId;
+		}
 		const response = await Company
-			.find({ userId: id })
+			.find(query)
 			.then((company) => {
 				return company
 			})
@@ -43,9 +51,29 @@ class CompanyRepository {
 		return response
 	}
 
-	static async getAllCompaniesByUserAndList(userId, listName) {
+	/**
+	 * Получить все компании по workspaceId
+	 */
+	static async getAllCompaniesByWorkspace(workspaceId) {
 		const response = await Company
-			.find({ userId }, { listName })
+			.find({ workspaceId })
+			.then((companies) => {
+				return companies
+			})
+			.catch((e) => {
+				console.log('Error getting companies by workspace:', e);
+				return null;
+			})
+		return response
+	}
+
+	static async getAllCompaniesByUserAndList(userId, listName, workspaceId) {
+		const query = { userId, listName };
+		if (workspaceId) {
+			query.workspaceId = workspaceId;
+		}
+		const response = await Company
+			.find(query)
 			.then((company) => {
 				return company
 			})
@@ -55,8 +83,12 @@ class CompanyRepository {
 		return response
 	}
 
-	static async getAllCompanies() {
-		const response = await Company.find()
+	static async getAllCompanies(workspaceId) {
+		const query = {};
+		if (workspaceId) {
+			query.workspaceId = workspaceId;
+		}
+		const response = await Company.find(query)
 			.then((result) => {
 				return result
 			})
@@ -67,19 +99,27 @@ class CompanyRepository {
 		return response
 	}
 
-	static async deleteCompany(id) {
+	static async deleteCompany(id, workspaceId) {
+		const query = { _id: id };
+		if (workspaceId) {
+			query.workspaceId = workspaceId;
+		}
 		await Company
-			.deleteOne({ _id: id })
+			.deleteOne(query)
 	}
 
-	static async updateCompany({ id, company }) {
+	static async updateCompany({ id, company, workspaceId }) {
+		const query = { _id: id };
+		if (workspaceId) {
+			query.workspaceId = workspaceId;
+		}
 		await Company
-			.updateOne({ _id: id }, { $set: company })
+			.updateOne(query, { $set: company })
 			.then((companyRes) => {
 				return companyRes
 			})
 		const response = Company
-			.findOne({ _id: id })
+			.findOne(query)
 			.then((companyRes) => {
 				return companyRes
 			})

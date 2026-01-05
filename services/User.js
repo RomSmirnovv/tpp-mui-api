@@ -6,7 +6,7 @@ import ListService from './List.js';
 
 class UserService {
 
-	static async createUser({ name, surname, patronymic, phone, birthDate, login, password, role }) {
+	static async createUser({ name, surname, patronymic, phone, birthDate, login, password, role, workspaceId, isEmailVerified }) {
 		const userData = await UserRepository.getUserData(login);
 		if (userData) {
 			throw new Conflict("Пользователь с таким логином уже существует");
@@ -15,7 +15,22 @@ class UserService {
 
 		const hashedPassword = bcrypt.hashSync(password, 8);
 
-		const response = await UserRepository.createUser({ name, surname, patronymic, phone, birthDate: birthDateFormated, login, hashedPassword, role });
+		// Если isEmailVerified не передан, устанавливаем true (для создания через админ-панель)
+		// При регистрации через форму регистрации будет false (по умолчанию)
+		const emailVerified = isEmailVerified !== undefined ? isEmailVerified : true;
+
+		const response = await UserRepository.createUser({ 
+			name, 
+			surname, 
+			patronymic, 
+			phone, 
+			birthDate: birthDateFormated, 
+			login, 
+			hashedPassword, 
+			role,
+			workspaceId,
+			isEmailVerified: emailVerified
+		});
 
 		if (response) {
 			const add_lists = [
@@ -42,6 +57,10 @@ class UserService {
 
 	static async getOneByProfile(id) {
 		const response = await UserRepository.getOneByProfile(id)
+		if (response && response.pText) {
+			// Удаляем pText если он существует (безопасность)
+			delete response.pText
+		}
 		return response
 	}
 
@@ -51,6 +70,10 @@ class UserService {
 		for (let i = 0; i < response.length; i++) {
 			newRes[i] = response[i]
 			newRes[i].password = ''
+			// Удаляем pText если он существует (безопасность)
+			if (newRes[i].pText) {
+				delete newRes[i].pText
+			}
 		}
 		return newRes
 	}
@@ -69,7 +92,16 @@ class UserService {
 			throw new Conflict("Нет пользователя с таким ID");
 		}
 
+		// Удаляем pText если он передан (безопасность)
+		if (user.pText) {
+			delete user.pText
+		}
+
 		const response = await UserRepository.updateUser(user)
+		// Убеждаемся, что pText не возвращается
+		if (response && response.pText) {
+			delete response.pText
+		}
 		return response
 	}
 }

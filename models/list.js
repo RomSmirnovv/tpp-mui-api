@@ -25,6 +25,13 @@ const listSchema = new Schema({
 	columns: {
 		type: Array,
 		required: false
+	},
+	// ID workspace (компании)
+	workspaceId: {
+		type: mongoose.Schema.Types.ObjectId,
+		ref: 'Workspace',
+		required: false,
+		default: null
 	}
 })
 

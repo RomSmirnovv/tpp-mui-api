@@ -4,8 +4,16 @@ import { User } from '../models/user.js'
 class UserRepository {
 
 
-	static async createUser({ name, surname, patronymic, phone, birthDate, login, hashedPassword, role }) {
-		const user = await new User({ name, surname, patronymic, phone, birthDate, login, password: hashedPassword, role })
+	static async createUser({ name, surname, patronymic, phone, birthDate, login, hashedPassword, role, workspaceId, isEmailVerified }) {
+		const userData = { name, surname, patronymic, phone, birthDate, login, password: hashedPassword, role };
+		if (workspaceId) {
+			userData.workspaceId = workspaceId;
+		}
+		// Если isEmailVerified передан, устанавливаем его (для админов)
+		if (isEmailVerified !== undefined) {
+			userData.isEmailVerified = isEmailVerified;
+		}
+		const user = await new User(userData);
 		const response = user
 			.save()
 			.then((result) => {

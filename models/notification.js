@@ -50,6 +50,13 @@ const notificationSchema = new Schema({
 		required: true,
 		default: false
 	},
+	// ID workspace (компании)
+	workspaceId: {
+		type: mongoose.Schema.Types.ObjectId,
+		ref: 'Workspace',
+		required: false,
+		default: null
+	}
 })
 
 export const Notification = mongoose.model('Notification', notificationSchema)

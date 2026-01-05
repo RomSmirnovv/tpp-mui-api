@@ -18,9 +18,13 @@ class DraftRepository {
 
     }
 
-    static async getOne(id) {
+    static async getOne(id, workspaceId) {
+        const query = { _id: id };
+        if (workspaceId) {
+            query.workspaceId = workspaceId;
+        }
         const response = await Draft
-            .findOne({ _id: id })
+            .findOne(query)
             .then((draft) => {
                 return draft
             })
@@ -42,9 +46,13 @@ class DraftRepository {
         return response
     }
 
-    static async getAllByUser(id) {
+    static async getAllByUser(id, workspaceId) {
+        const query = { userId: id };
+        if (workspaceId) {
+            query.workspaceId = workspaceId;
+        }
         const response = await Draft
-            .find({ userId: id })
+            .find(query)
             .then((draft) => {
                 return draft
             })
@@ -54,8 +62,12 @@ class DraftRepository {
         return response
     }
 
-    static async getAll() {
-        const response = await Draft.find()
+    static async getAll(workspaceId) {
+        const query = {};
+        if (workspaceId) {
+            query.workspaceId = workspaceId;
+        }
+        const response = await Draft.find(query)
             .then((result) => {
                 return result
             })
@@ -66,9 +78,13 @@ class DraftRepository {
         return response
     }
 
-    static async delete(id) {
+    static async delete(id, workspaceId) {
+        const query = { _id: id };
+        if (workspaceId) {
+            query.workspaceId = workspaceId;
+        }
         await Draft
-            .deleteOne({ _id: id })
+            .deleteOne(query)
     }
 
     static async update({ id, draft }) {

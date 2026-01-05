@@ -1,6 +1,7 @@
 import UserService from '../services/User.js'
 import ErrorsUtils from "../utils/Errors.js";
 import AuthService from "../services/Auth.js";
+import { getWorkspaceIdFromRequest } from '../utils/getWorkspaceId.js';
 
 class UserController {
 
@@ -8,7 +9,22 @@ class UserController {
 		const { name, surname, patronymic, phone, birthDate, login, password, role } = req.body
 
 		try {
-			const user = await UserService.createUser({ name, surname, patronymic, phone, birthDate, login, password, role })
+			// Получаем workspaceId из запроса (для создания пользователя в том же workspace)
+			const workspaceId = await getWorkspaceIdFromRequest(req);
+			
+			// При создании через админ-панель email считается подтвержденным
+			const user = await UserService.createUser({ 
+				name, 
+				surname, 
+				patronymic, 
+				phone, 
+				birthDate, 
+				login, 
+				password, 
+				role,
+				workspaceId,
+				isEmailVerified: true // Email подтвержден при создании через админ-панель
+			})
 			return res.status(200).json(user)
 		} catch (err) {
 			return ErrorsUtils.catchError(res, err);
@@ -68,7 +84,8 @@ class UserController {
 				patronymic,
 				login,
 				projects,
-				role
+				role,
+				workspaceId
 			} = user
 			return res.status(200).json({
 				status: 'success',
@@ -80,7 +97,8 @@ class UserController {
 						patronymic,
 						login,
 						projects,
-						role
+						role,
+						workspaceId: workspaceId ? (workspaceId._id || workspaceId.toString()) : null
 					},
 				}
 			});

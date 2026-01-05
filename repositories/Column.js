@@ -19,9 +19,13 @@ class ColumnRepository {
 
 	}
 
-	static async getOne(id) {
+	static async getOne(id, workspaceId) {
+		const query = { _id: id };
+		if (workspaceId) {
+			query.workspaceId = workspaceId;
+		}
 		const response = await Column
-			.findOne({ _id: id })
+			.findOne(query)
 			.then((column) => {
 				return column
 			})
@@ -31,9 +35,13 @@ class ColumnRepository {
 		return response
 	}
 
-	static async getOneByName(name) {
+	static async getOneByName(name, workspaceId) {
+		const query = { name: name };
+		if (workspaceId) {
+			query.workspaceId = workspaceId;
+		}
 		const response = await Column
-			.findOne({ name: name })
+			.findOne(query)
 			.then((column) => {
 				return column
 			})
@@ -55,8 +63,12 @@ class ColumnRepository {
 		return response
 	}
 
-	static async getAll() {
-		const response = await Column.find()
+	static async getAll(workspaceId) {
+		const query = {};
+		if (workspaceId) {
+			query.workspaceId = workspaceId;
+		}
+		const response = await Column.find(query)
 			.then((result) => {
 				return result
 			})
@@ -67,9 +79,13 @@ class ColumnRepository {
 		return response
 	}
 
-	static async delete(id) {
+	static async delete(id, workspaceId) {
+		const query = { _id: id };
+		if (workspaceId) {
+			query.workspaceId = workspaceId;
+		}
 		await Column
-			.deleteOne({ _id: id })
+			.deleteOne(query)
 	}
 
 	static async update({ id, column }) {

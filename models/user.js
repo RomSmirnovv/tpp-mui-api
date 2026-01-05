@@ -38,13 +38,21 @@ const userSchema = new Schema({
 		type: String,
 		required: true
 	},
-	pText: {
-		type: String,
-		required: false
-	},
 	blocked: {
 		type: Boolean,
 		default: false,
+	},
+	// Подтвержден ли email
+	isEmailVerified: {
+		type: Boolean,
+		default: false,
+	},
+	// ID workspace (компании)
+	workspaceId: {
+		type: mongoose.Schema.Types.ObjectId,
+		ref: 'Workspace',
+		required: false,
+		default: null
 	}
 })
 

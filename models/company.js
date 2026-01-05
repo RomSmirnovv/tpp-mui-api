@@ -118,6 +118,13 @@ const companySchema = new Schema({
 		type: Boolean,
 		required: true,
 		default: false
+	},
+	// ID workspace (компании)
+	workspaceId: {
+		type: mongoose.Schema.Types.ObjectId,
+		ref: 'Workspace',
+		required: false,
+		default: null
 	}
 }, { strict: false })
 
