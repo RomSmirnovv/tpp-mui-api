@@ -181,12 +181,12 @@ io.on('connection', (socket) => {
 			}
 
 			// Присоединяемся к комнатам с префиксом workspace для изоляции
-			const roomsName = rooms.map((r) => {
+		const roomsName = rooms.map((r) => {
 				return `workspace:${workspaceId}:${r.room.join('-')}`;
 			});
 
-			roomsName.forEach((r) => {
-				socket.join(r);
+		roomsName.forEach((r) => {
+			socket.join(r);
 			});
 
 			console.log(`✅ Socket.IO: Пользователь присоединился к комнатам: ${roomsName.join(', ')}`);
