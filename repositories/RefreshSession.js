@@ -1,36 +1,37 @@
-import { RefreshSession } from '../models/session.js'
+import crypto from 'node:crypto';
+import { RefreshSession } from '../models/session.js';
+
+const hashToken = (token) =>
+  crypto.createHash('sha256').update(String(token)).digest('hex');
 
 class RefreshSessionRepository {
+  static async createRefreshSession({ _id, refreshToken, fingerprint }) {
+    return RefreshSession.create({
+      user_id: String(_id),
+      token_hash: hashToken(refreshToken),
+      finger_print: String(fingerprint?.hash || ''),
+    });
+  }
 
-	static async createRefreshSession({ _id, refreshToken, fingerprint }) {
-		const refreshSession = await new RefreshSession({ user_id: _id, refresh_token: refreshToken, finger_print: fingerprint.hash })
+  static async getRefreshSession(refreshToken) {
+    if (!refreshToken) {
+      return null;
+    }
 
-		refreshSession
-			.save()
-			.then((result) => {
-				return result
-			})
-			.catch((e) => console.log(e))
+    return RefreshSession.findOne({ token_hash: hashToken(refreshToken) });
+  }
 
-	}
+  static async deleteRefreshSession(refreshToken) {
+    if (!refreshToken) {
+      return;
+    }
 
+    await RefreshSession.deleteOne({ token_hash: hashToken(refreshToken) });
+  }
 
-	static async getRefreshSession(refreshToken) {
-		const response = await RefreshSession
-			.findOne({ refresh_token: refreshToken })
-			.then((session) => {
-				return session
-			})
-		if (!response) {
-			return null;
-		}
-		return response
-	}
-
-	static async deleteRefreshSession(refreshToken) {
-		await RefreshSession
-			.deleteOne({ refresh_token: refreshToken })
-	}
+  static async deleteRefreshSessionsByUser(userId) {
+    await RefreshSession.deleteMany({ user_id: String(userId) });
+  }
 }
 
 export default RefreshSessionRepository;

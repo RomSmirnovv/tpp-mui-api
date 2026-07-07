@@ -1,86 +1,80 @@
-import AuthService from "../services/Auth.js";
-import ErrorsUtils from "../utils/Errors.js";
-import { COOKIE_SETTINGS } from "../constants.js";
-import moment from 'moment/moment.js';
-import jwt from "jsonwebtoken";
-import UserRepository from '../repositories/User.js';
+import AuthService from '../services/Auth.js';
+import ErrorsUtils, { BadRequest } from '../utils/Errors.js';
+import {
+  ACCESS_TOKEN_COOKIE,
+  REFRESH_TOKEN_COOKIE,
+  LOGGED_IN_COOKIE,
+  COOKIE_SETTINGS,
+  CLEAR_ACCESS_COOKIE,
+  CLEAR_REFRESH_COOKIE,
+  CLEAR_LOGGED_IN_COOKIE,
+} from '../constants.js';
 
 class AuthController {
-	static async signIn(req, res) {
-		const { login, password } = req.body;
-		const { fingerprint } = req;
-		try {
-			const { accessToken, refreshToken, accessTokenExpiration
-			} =
-				await AuthService.login({
-					login,
-					password,
-					fingerprint,
-				});
+  static async signIn(req, res) {
+    const { login, password } = req.body || {};
 
+    try {
+      if (!login || !password) {
+        throw new BadRequest('Укажите логин и пароль');
+      }
 
-			res.cookie("refreshToken", refreshToken, COOKIE_SETTINGS.REFRESH_TOKEN);
-			res.cookie('logged_in', true, COOKIE_SETTINGS.REFRESH_TOKEN);
+      const { accessToken, refreshToken, accessTokenExpiration } = await AuthService.login({
+        login,
+        password,
+        fingerprint: req.fingerprint,
+      });
 
-			return res.status(200).json({
-				accessToken, accessTokenExpiration
-			});
-		} catch (err) {
-			return ErrorsUtils.catchError(res, err);
-		}
-	}
+      res.cookie(ACCESS_TOKEN_COOKIE, accessToken, COOKIE_SETTINGS.ACCESS_TOKEN);
+      res.cookie(REFRESH_TOKEN_COOKIE, refreshToken, COOKIE_SETTINGS.REFRESH_TOKEN);
+      // Этот cookie — только UI-маркер. Сервер никогда не использует его для авторизации.
+      res.cookie(LOGGED_IN_COOKIE, 'true', COOKIE_SETTINGS.LOGGED_IN);
 
-	static async signUp(req, res) {
-		const { name, surname, patronymic, phone, birthDate, login, password, role } = req.body;
-		let birthDateFormated = moment(birthDate).format('DD.MM.YYYY')
-		const { fingerprint } = req;
+      return res.status(200).json({
+        status: 'success',
+        accessTokenExpiration,
+      });
+    } catch (error) {
+      return ErrorsUtils.catchError(res, error);
+    }
+  }
 
-		try {
-			const user = await AuthService.register({ name, surname, patronymic, login, password, role });
+  static async logOut(req, res) {
+    try {
+      await AuthService.logOut(req.cookies?.[REFRESH_TOKEN_COOKIE]);
 
-			return res.status(200).json({
-				message: `Пользователь ${surname} ${name} успешно создан`
-			});
-		} catch (err) {
-			return ErrorsUtils.catchError(res, err);
-		}
-	}
+      res.clearCookie(ACCESS_TOKEN_COOKIE, CLEAR_ACCESS_COOKIE);
+      res.clearCookie(REFRESH_TOKEN_COOKIE, CLEAR_REFRESH_COOKIE);
+      res.clearCookie(LOGGED_IN_COOKIE, CLEAR_LOGGED_IN_COOKIE);
 
-	static async logOut(req, res) {
-		const refreshToken = req.cookies.refreshToken;
-		try {
-			await AuthService.logOut(refreshToken);
+      return res.sendStatus(200);
+    } catch (error) {
+      return ErrorsUtils.catchError(res, error);
+    }
+  }
 
-			res.cookie('refreshToken', '', { maxAge: 1 });
-			res.cookie('logged_in', false, { maxAge: 1 });
+  static async refresh(req, res) {
+    try {
+      const { accessToken, refreshToken, accessTokenExpiration } = await AuthService.refresh({
+        currentRefreshToken: req.cookies?.[REFRESH_TOKEN_COOKIE],
+        fingerprint: req.fingerprint,
+      });
 
-			return res.sendStatus(200);
-		} catch (err) {
-			return ErrorsUtils.catchError(res, err);
-		}
-	}
+      res.cookie(ACCESS_TOKEN_COOKIE, accessToken, COOKIE_SETTINGS.ACCESS_TOKEN);
+      res.cookie(REFRESH_TOKEN_COOKIE, refreshToken, COOKIE_SETTINGS.REFRESH_TOKEN);
+      res.cookie(LOGGED_IN_COOKIE, 'true', COOKIE_SETTINGS.LOGGED_IN);
 
-	static async refresh(req, res) {
-		const currentRefreshToken = req.cookies.refreshToken;
-		const { fingerprint } = req;
-
-		try {
-			const { accessToken, refreshToken, accessTokenExpiration } =
-				await AuthService.refresh({
-					currentRefreshToken,
-					fingerprint,
-				});
-
-			res.cookie('refreshToken', refreshToken)
-
-			return res.status(200).json({
-				accessToken,
-				accessTokenExpiration
-			});
-		} catch (err) {
-			return ErrorsUtils.catchError(res, err);
-		}
-	}
+      return res.status(200).json({
+        status: 'success',
+        accessTokenExpiration,
+      });
+    } catch (error) {
+      res.clearCookie(ACCESS_TOKEN_COOKIE, CLEAR_ACCESS_COOKIE);
+      res.clearCookie(REFRESH_TOKEN_COOKIE, CLEAR_REFRESH_COOKIE);
+      res.clearCookie(LOGGED_IN_COOKIE, CLEAR_LOGGED_IN_COOKIE);
+      return ErrorsUtils.catchError(res, error);
+    }
+  }
 }
 
 export default AuthController;

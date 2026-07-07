@@ -1,143 +1,169 @@
-import bcrypt from "bcryptjs";
-import TokenService from "./Token.js";
+import bcrypt from 'bcryptjs';
+import TokenService from './Token.js';
 import {
-	NotFound,
-	Forbidden,
-	Conflict,
-	Unauthorized,
-} from "../utils/Errors.js";
-import RefreshSessionRepository from "../repositories/RefreshSession.js";
-import UserRepository from "../repositories/User.js";
-import { ACCESS_TOKEN_EXPIRATION } from "../constants.js";
-import ListService from './List.js';
+  Forbidden,
+  NotFound,
+  Unauthorized,
+} from '../utils/Errors.js';
+import RefreshSessionRepository from '../repositories/RefreshSession.js';
+import UserRepository from '../repositories/User.js';
+import { ACCESS_TOKEN_EXPIRATION } from '../constants.js';
 
 class AuthService {
-	static async login({ login, password, fingerprint }) {
-		const userData = await UserRepository.getUserData(login);
-		if (!userData) {
-			throw new NotFound("Пользователь с таким логином не найден");
-		}
-		const blocked = userData.blocked
-		const role = userData.role
+  static buildPayload(user) {
+    return {
+      _id: String(user._id),
+      login: user.login,
+      role: Number(user.role),
+      fullName: `${user.surname || ''} ${user.name || ''}`.trim(),
+    };
+  }
 
-		if (blocked && userData.role == 3) {
-			throw new Forbidden("Доступ к аккаунту ограничен");
-		}
+  static async getActiveUserById(userId) {
+    const user = await UserRepository.getUserById(userId);
 
-		const isPasswordValid = bcrypt.compareSync(password, userData.password);
+    if (!user) {
+      throw new Unauthorized('Пользователь не найден');
+    }
 
-		if (!isPasswordValid) {
-			throw new Forbidden("Неверный логин или пароль");
-		}
+    if (user.blocked) {
+      throw new Forbidden('Доступ к аккаунту ограничен');
+    }
 
-		const payload = { role: userData.role, _id: userData._id, login };
+    return user;
+  }
 
-		const accessToken = await TokenService.generateAccessToken(payload);
-		const refreshToken = await TokenService.generateRefreshToken(payload);
+  static async login({ login, password, fingerprint }) {
+    const user = await UserRepository.getUserData(login);
 
-		await RefreshSessionRepository.createRefreshSession({
-			_id: userData._id,
-			refreshToken,
-			fingerprint,
-		});
+    if (!user) {
+      throw new Unauthorized('Неверный логин или пароль');
+    }
 
-		return {
-			accessToken,
-			refreshToken,
-			accessTokenExpiration: ACCESS_TOKEN_EXPIRATION,
-		};
-	}
+    if (user.blocked) {
+      throw new Forbidden('Доступ к аккаунту ограничен');
+    }
 
-	static async register({ name, surname, patronymic, phone, birthDate, login, password, role, fingerprint }) {
-		const userData = await UserRepository.getUserData(login);
-		if (userData) {
-			throw new Conflict("Пользователь с таким логином уже существует");
-		}
+    const validPassword = await bcrypt.compare(String(password || ''), user.password);
 
-		const hashedPassword = bcrypt.hashSync(password, 8);
-		const pText = password
-		const user = await UserRepository.createUser({ name, surname, patronymic, phone, birthDate, login, hashedPassword, role, pText });
+    if (!validPassword) {
+      throw new Unauthorized('Неверный логин или пароль');
+    }
 
-		return {
-			user
-		};
-	}
+    const payload = AuthService.buildPayload(user);
+    const accessToken = TokenService.generateAccessToken(payload);
+    const refreshToken = TokenService.generateRefreshToken(payload);
 
-	static async logOut(refreshToken) {
-		await RefreshSessionRepository.deleteRefreshSession(refreshToken);
-	}
+    await RefreshSessionRepository.createRefreshSession({
+      _id: user._id,
+      refreshToken,
+      fingerprint,
+    });
 
-	static async refresh({ fingerprint, currentRefreshToken }) {
-		if (!currentRefreshToken) {
-			throw new Unauthorized();
-		}
+    return {
+      accessToken,
+      refreshToken,
+      accessTokenExpiration: ACCESS_TOKEN_EXPIRATION,
+    };
+  }
 
-		const refreshSession = await RefreshSessionRepository.getRefreshSession(
-			currentRefreshToken
-		);
+  static async refresh({ fingerprint, currentRefreshToken }) {
+    if (!currentRefreshToken) {
+      throw new Unauthorized('Сессия не найдена');
+    }
 
-		if (!refreshSession) {
-			throw new Unauthorized();
-		}
+    const session = await RefreshSessionRepository.getRefreshSession(currentRefreshToken);
 
-		if (refreshSession.finger_print !== fingerprint.hash) {
-			throw new Forbidden();
-		}
+    if (!session) {
+      throw new Unauthorized('Сессия истекла');
+    }
 
-		await RefreshSessionRepository.deleteRefreshSession(currentRefreshToken);
+    if (session.finger_print !== String(fingerprint?.hash || '')) {
+      throw new Forbidden('Сессия открыта в другом браузере');
+    }
 
-		let payload;
-		try {
-			payload = await TokenService.verifyRefreshToken(currentRefreshToken);
-		} catch (error) {
-			throw new Forbidden(error);
-		}
+    let payload;
+    try {
+      payload = TokenService.verifyRefreshToken(currentRefreshToken);
+    } catch {
+      await RefreshSessionRepository.deleteRefreshSession(currentRefreshToken);
+      throw new Unauthorized('Сессия истекла');
+    }
 
-		const {
-			_id,
-			role,
-			login
-		} = await UserRepository.getUserData(payload.login);
+    if (String(payload._id) !== String(session.user_id)) {
+      await RefreshSessionRepository.deleteRefreshSession(currentRefreshToken);
+      throw new Unauthorized('Некорректная сессия');
+    }
 
-		const actualPayload = { _id, login, role };
+    const user = await AuthService.getActiveUserById(payload._id);
 
-		const accessToken = await TokenService.generateAccessToken(actualPayload);
-		const refreshToken = await TokenService.generateRefreshToken(actualPayload);
+    await RefreshSessionRepository.deleteRefreshSession(currentRefreshToken);
 
-		await RefreshSessionRepository.createRefreshSession({
-			_id,
-			refreshToken,
-			fingerprint,
-		});
+    const actualPayload = AuthService.buildPayload(user);
+    const accessToken = TokenService.generateAccessToken(actualPayload);
+    const refreshToken = TokenService.generateRefreshToken(actualPayload);
 
-		return {
-			accessToken,
-			refreshToken,
-			accessTokenExpiration: ACCESS_TOKEN_EXPIRATION,
-		};
-	}
+    await RefreshSessionRepository.createRefreshSession({
+      _id: user._id,
+      refreshToken,
+      fingerprint,
+    });
 
-	static async getUserByToken({ currentRefreshToken, fingerprint }) {
-		if (!currentRefreshToken) {
-			throw new Unauthorized();
-		}
-		const refreshSession = await RefreshSessionRepository.getRefreshSession(
-			currentRefreshToken
-		);
+    return {
+      accessToken,
+      refreshToken,
+      accessTokenExpiration: ACCESS_TOKEN_EXPIRATION,
+    };
+  }
 
-		if (!refreshSession) {
-			throw new Unauthorized();
-		}
-		if (refreshSession.finger_print !== fingerprint.hash) {
-			throw new Forbidden();
-		}
+  static async authenticateRequest({ accessToken, refreshToken, fingerprint }) {
+    if (accessToken) {
+      try {
+        const tokenPayload = TokenService.verifyAccessToken(accessToken);
+        const user = await AuthService.getActiveUserById(tokenPayload._id);
 
-		const user = await UserRepository.getUserById(refreshSession.user_id);
-		if (!user) {
-			throw new Unauthorized();
-		}
-		return user;
-	}
+        return {
+          auth: AuthService.buildPayload(user),
+          rotatedAccessToken: null,
+        };
+      } catch {
+        // Истёкший access-token восстанавливаем только через зарегистрированную refresh-сессию.
+      }
+    }
+
+    const refreshed = await AuthService.refresh({
+      fingerprint,
+      currentRefreshToken: refreshToken,
+    });
+
+    const refreshedPayload = TokenService.verifyAccessToken(refreshed.accessToken);
+
+    return {
+      auth: refreshedPayload,
+      rotatedAccessToken: refreshed.accessToken,
+      rotatedRefreshToken: refreshed.refreshToken,
+    };
+  }
+
+  static async authenticateSocket(accessToken) {
+    if (!accessToken) {
+      throw new Unauthorized('Требуется авторизация');
+    }
+
+    let tokenPayload;
+    try {
+      tokenPayload = TokenService.verifyAccessToken(accessToken);
+    } catch {
+      throw new Unauthorized('Обновите страницу и войдите повторно');
+    }
+
+    const user = await AuthService.getActiveUserById(tokenPayload._id);
+    return AuthService.buildPayload(user);
+  }
+
+  static async logOut(refreshToken) {
+    await RefreshSessionRepository.deleteRefreshSession(refreshToken);
+  }
 }
 
 export default AuthService;

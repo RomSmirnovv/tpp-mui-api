@@ -1,12 +1,13 @@
-import { Router } from "express";
-import AuthController from "../controllers/Auth.js";
-import AuthValidator from "../validators/Auth.js";
+import { Router } from 'express';
+import AuthController from '../controllers/Auth.js';
 
-const router = Router();
+const authRouter = Router();
 
-router.post("/sign-in", AuthController.signIn);
-router.post("/sign-up", AuthController.signUp);
-router.post("/logout", AuthController.logOut);
-router.post("/refresh", AuthController.refresh);
+authRouter.post('/sign-in', AuthController.signIn);
+authRouter.post('/refresh', AuthController.refresh);
+authRouter.post('/logout', AuthController.logOut);
 
-export default router;
+// Публичная регистрация намеренно отключена.
+// Новых пользователей создаёт только администратор через POST /user.
+
+export default authRouter;

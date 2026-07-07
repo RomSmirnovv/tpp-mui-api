@@ -1,48 +1,52 @@
-import jwt from "jsonwebtoken";
-import dotenv from "dotenv";
-import { Forbidden, Unauthorized } from "../utils/Errors.js";
-
-dotenv.config();
+import jwt from 'jsonwebtoken';
+import { Unauthorized } from '../utils/Errors.js';
 
 class TokenService {
-	static async generateAccessToken(payload) {
-		return await jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, {
-			expiresIn: "30m",
-		});
-	}
+  static generateAccessToken(payload) {
+    return jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '30m' });
+  }
 
-	static async generateRefreshToken(payload) {
-		return await jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, {
-			expiresIn: "15d",
-		});
-	}
+  static generateRefreshToken(payload) {
+    return jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '15d' });
+  }
 
-	static async verifyAccessToken(accessToken) {
-		return await jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
-	}
+  static verifyAccessToken(token) {
+    return jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+  }
 
-	static async verifyRefreshToken(refreshToken) {
-		return await jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
-	}
+  static verifyRefreshToken(token) {
+    return jwt.verify(token, process.env.REFRESH_TOKEN_SECRET);
+  }
 
-	static async checkAccess(req, _, next) {
-		const authHeader = req.headers.authorization;
-		const token = authHeader?.split(" ")?.[1];
+  static extractAccessToken(request) {
+    const cookieToken = request?.cookies?.accessToken;
+    if (cookieToken) {
+      return cookieToken;
+    }
 
-		if (!token) {
-			return next(new Unauthorized());
-		}
+    const authHeader = request?.headers?.authorization;
+    const bearerToken = authHeader?.startsWith('Bearer ')
+      ? authHeader.slice('Bearer '.length).trim()
+      : '';
 
-		try {
-			req.user = await TokenService.verifyAccessToken(token);
-			console.log(req.user);
-		} catch (error) {
-			console.log(error);
-			return next(new Forbidden(error));
-		}
+    return bearerToken || null;
+  }
 
-		next();
-	}
+  // Совместимость с прежними импортами. В новых маршрутах используется requireAuth.
+  static checkAccess(req, _res, next) {
+    const token = TokenService.extractAccessToken(req);
+
+    if (!token) {
+      return next(new Unauthorized('Требуется авторизация'));
+    }
+
+    try {
+      req.user = TokenService.verifyAccessToken(token);
+      return next();
+    } catch (error) {
+      return next(new Unauthorized('Сессия истекла'));
+    }
+  }
 }
 
 export default TokenService;
