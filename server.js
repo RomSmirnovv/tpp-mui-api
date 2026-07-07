@@ -40,6 +40,8 @@ if (missingEnv.length) {
 }
 
 const PORT = Number(process.env.PORT || 5000);
+// API is only reached through Nginx. Direct public access to port 5000 is disabled.
+const HOST = process.env.HOST || '127.0.0.1';
 const app = express();
 const server = createServer(app);
 
@@ -192,8 +194,8 @@ const start = async () => {
     }
   });
 
-  server.listen(PORT, () => {
-    console.log(`TPP API is listening on port ${PORT}`);
+  server.listen(PORT, HOST, () => {
+    console.log(`TPP API is listening on http://${HOST}:${PORT}`);
   });
 };
 
